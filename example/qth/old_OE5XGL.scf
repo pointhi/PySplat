@@ -1,0 +1,28 @@
+; SPLAT! Auto-generated Signal Color Definition ("qth/OE5XGL.scf") File
+;
+; Format for the parameters held in this file is as follows:
+;
+;    dBuV/m: red, green, blue
+;
+; ...where "dBuV/m" is the signal strength (in dBuV/m) and
+; "red", "green", and "blue" are the corresponding RGB color
+; definitions ranging from 0 to 255 for the region specified.
+;
+; The following parameters may be edited and/or expanded
+; for future runs of SPLAT!  A total of 32 contour regions
+; may be defined in this file.
+;
+;
+128: 255, 255, 255
+118: 255, 255, 127
+108: 255, 255, 63
+ 98: 255, 255, 31
+ 88: 255, 255, 0
+ 78: 255, 127, 0
+ 68: 255,  63, 0
+ 58: 255,  31, 0
+ 48: 255,   0, 0
+ 38: 127,   0, 0
+ 28:  63,   0, 0
+ 18:  31,   0, 0
+  8:   0,   0, 0
