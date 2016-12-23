@@ -49,7 +49,7 @@ class SplatQTH(object):
 def run_splat(qth_obj, srtm_dir, output_file):
     #print("render splat map: {0} to {1}".format(qth_obj, output_file))
 
-    # output path has to exit (otherwise SEGFAULT!)
+    # output path has to exist (otherwise SEGFAULT!)
     output_path = os.path.dirname(output_file)
     if not os.path.exists(output_path):
         print("create directory: {0}".format(output_path))
