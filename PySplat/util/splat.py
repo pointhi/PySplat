@@ -72,7 +72,8 @@ def run_splat(qth_obj, srtm_dir, output_file):
 
     try:
         with subprocess.Popen(splat_call, cwd=tmp_dir, shell=False) as splat_sp:
-            splat_sp.wait()  # TODO: timeout
+            # TODO: , stdout=subprocess.PIPE
+            splat_sp.wait()
             # TODO: get data and parse output
 
             print("return code: {0}".format(splat_sp.returncode))

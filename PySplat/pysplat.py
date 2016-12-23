@@ -19,6 +19,9 @@ along with kicad-footprint-generator. If not, see < http://www.gnu.org/licenses/
 import argparse, sys, os
 import ntpath
 import logging
+import concurrent
+
+from concurrent.futures import ThreadPoolExecutor
 
 sys.path.append(os.path.join(sys.path[0], "../")) # enable package import from parent directory
 
@@ -84,6 +87,7 @@ if __name__ == '__main__':
         parser.add_argument('qth', nargs='+', help='txsite(s).qth', action='store')
         parser.add_argument('--out', dest='outputdir', default='./', help='output directory where we store the calculated data')
         parser.add_argument('--srtm', dest='srtmdir', default='./srtm', help='directory where srtm data is stored')
+        parser.add_argument('-y', type=int, default=1, choices=range(1,256), help='number of threads')
         parser.add_argument('-v', '--verbose', help='show extra information', action='store_true')
         parser.add_argument('-d', '--debug', help='show debug informations', action='store_true')
 
@@ -97,8 +101,19 @@ if __name__ == '__main__':
 
         qth_files = get_qth_files(args.qth)
 
-        for qth in qth_files:
-            run_splat(qth, args.srtmdir, os.path.join(args.outputdir, '{name}.ppm'.format(name=qth.name)))
+        with ThreadPoolExecutor(max_workers=args.y) as executor:
+            futures = []
+            try:
+                # create threads
+                for qth in qth_files:
+                    futures += [executor.submit(run_splat, qth, args.srtmdir, os.path.join(args.outputdir, '{name}.ppm'.format(name=qth.name)))]
+
+                # wait until finished
+                # TODO: http://stackoverflow.com/questions/29177490/how-do-you-kill-futures-once-they-have-started
+                concurrent.futures.wait(futures)
+
+            except Exception as e:
+                print("except: {0}".format(e))
 
     except KeyboardInterrupt:
         pass
