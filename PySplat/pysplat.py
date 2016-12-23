@@ -16,13 +16,13 @@ along with kicad-footprint-generator. If not, see < http://www.gnu.org/licenses/
 (C) 2016 by Thomas Pointhuber, <thomas.pointhuber@gmx.at>
 '''
 
-import argparse, glob, sys, os
+import argparse, sys, os
 import ntpath
 import logging
 
 sys.path.append(os.path.join(sys.path[0], "../")) # enable package import from parent directory
 
-from PySplat.util.splat import SplatQTH
+from PySplat.util.splat import SplatQTH, run_splat
 
 
 logging.basicConfig(level=logging.WARNING)
@@ -76,12 +76,13 @@ def get_qth_files(qht_file):
 
     return qth_obj
 
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument('qth', help='txsite(s).qth', nargs='+', action='store')
-    parser.add_argument('-o', dest='output', help='output directory')
+    parser.add_argument('-o', dest='output', help='output directory') # TODO: use
     parser.add_argument('-v', '--verbose', help='show extra information', action='store_true')
     parser.add_argument('-d', '--debug', help='show debug informations', action='store_true')
 
@@ -94,3 +95,6 @@ if __name__ == '__main__':
         logger.setLevel(logging.DEBUG)
 
     qth_files = get_qth_files(args.qth)
+
+    for qth in qth_files:
+        run_splat(qth, '../srtm/SRTM_v3/', '../out/{name}.ppm'.format(name=qth.name))
