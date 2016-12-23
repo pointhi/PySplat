@@ -47,7 +47,7 @@ class SplatQTH(object):
 
 
 def run_splat(qth_obj, srtm_dir, output_file):
-    print("render splat map: {0} to {1}".format(qth_obj, output_file))
+    #print("render splat map: {0} to {1}".format(qth_obj, output_file))
 
     # output path has to exit (otherwise SEGFAULT!)
     output_path = os.path.dirname(output_file)
@@ -65,7 +65,7 @@ def run_splat(qth_obj, srtm_dir, output_file):
     splat_call += ["-metric"]  # we want to use metric everywhere
     splat_call += ["-o", os.path.abspath(output_file)] # filename of topographic map to generate (.ppm)
 
-    print("run command: \"{0}\"".format(" ".join(splat_call)))
+    #print("run command: \"{0}\"".format(" ".join(splat_call)))
 
     tmp_dir = tempfile.mkdtemp("_pysplat")
     print("use tmp dir: {0}".format(tmp_dir))
@@ -74,10 +74,15 @@ def run_splat(qth_obj, srtm_dir, output_file):
         with subprocess.Popen(splat_call, cwd=tmp_dir, shell=False) as splat_sp:
             splat_sp.wait()  # TODO: timeout
             # TODO: get data and parse output
+
             print("return code: {0}".format(splat_sp.returncode))
+            if splat_sp.returncode != 0:
+                return
+
+            site_reporter_file = os.path.join(tmp_dir, "{qth_filename}-site_report.txt".format(qth_filename=qth_obj.name))
+            # print("remove file: {0}".format(site_reporter_file))
+            os.remove(site_reporter_file)
+
     finally:
         # we want to delete the tmp folder in all cases
-        site_reporter_file = os.path.join(tmp_dir, "{qth_filename}-site_report.txt".format(qth_filename=qth_obj.name))
-        # print("remove file: {0}".format(site_reporter_file))
-        os.remove(site_reporter_file)
         os.rmdir(tmp_dir)

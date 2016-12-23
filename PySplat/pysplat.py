@@ -78,23 +78,27 @@ def get_qth_files(qht_file):
 
 
 if __name__ == '__main__':
+    try:
+        parser = argparse.ArgumentParser()
 
-    parser = argparse.ArgumentParser()
+        parser.add_argument('qth', nargs='+', help='txsite(s).qth', action='store')
+        parser.add_argument('--out', dest='outputdir', default='./', help='output directory where we store the calculated data')
+        parser.add_argument('--srtm', dest='srtmdir', default='./srtm', help='directory where srtm data is stored')
+        parser.add_argument('-v', '--verbose', help='show extra information', action='store_true')
+        parser.add_argument('-d', '--debug', help='show debug informations', action='store_true')
 
-    parser.add_argument('qth', help='txsite(s).qth', nargs='+', action='store')
-    parser.add_argument('-o', dest='output', help='output directory') # TODO: use
-    parser.add_argument('-v', '--verbose', help='show extra information', action='store_true')
-    parser.add_argument('-d', '--debug', help='show debug informations', action='store_true')
+        args = parser.parse_args()
 
-    args = parser.parse_args()
+        if args.verbose:
+            logger.setLevel(logging.INFO)
 
-    if args.verbose:
-        logger.setLevel(logging.INFO)
+        if args.debug:
+            logger.setLevel(logging.DEBUG)
 
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
+        qth_files = get_qth_files(args.qth)
 
-    qth_files = get_qth_files(args.qth)
+        for qth in qth_files:
+            run_splat(qth, args.srtmdir, os.path.join(args.outputdir, '{name}.ppm'.format(name=qth.name)))
 
-    for qth in qth_files:
-        run_splat(qth, '../srtm/SRTM_v3/', '../out/{name}.ppm'.format(name=qth.name))
+    except KeyboardInterrupt:
+        pass
