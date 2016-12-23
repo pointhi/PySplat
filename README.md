@@ -18,4 +18,30 @@ coverage of radio transmitters with as many TX-sites as we want (without having 
 ### Dependencies
 
 * splat
-* (opencl, PIL,..)
+* ~~(opencl, PIL,..)~~
+
+### Example usage
+
+#### Calculate basic RF map
+
+*(currently, you have to download and preprocess the required srtm files manually)*
+
+```
+./PySplat/pysplat.py example/qth/OE5XGL.qth --out ./out --srtm ./path/to/srtm/folder
+```
+
+#### Split tiles
+
+*TODO: not implemented yet*
+
+```
+./PySplat/pysplat_split.py ./out/OE5XGL.ppm ./tiles/OE5XGL
+```
+
+#### Merge multiple tiles
+
+*TODO: not implemented yet*
+
+```
+./PySplat/pysplat_merge.py ./tiles/OE5* --out ./tiles_merged/OE5xxx
+```
