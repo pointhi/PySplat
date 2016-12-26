@@ -25,6 +25,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 sys.path.append(os.path.join(sys.path[0], "../")) # enable package import from parent directory
 
+from PySplat.util.argparse_helper import check_thread_count
 from PySplat.util.splat import SplatQTH, run_splat
 
 
@@ -87,7 +88,7 @@ if __name__ == '__main__':
         parser.add_argument('qth', nargs='+', help='txsite(s).qth', action='store')
         parser.add_argument('--out', dest='outputdir', default='./', help='output directory where we store the calculated data')
         parser.add_argument('--srtm', dest='srtmdir', default='./srtm', help='directory where srtm data is stored')
-        parser.add_argument('-y', type=int, default=1, choices=range(1,256), help='number of threads')
+        parser.add_argument('-y', dest='threads', type=check_thread_count, default=1, help='number of threads')
         parser.add_argument('-v', '--verbose', help='show extra information', action='store_true')
         parser.add_argument('-d', '--debug', help='show debug informations', action='store_true')
 
