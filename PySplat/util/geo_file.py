@@ -33,32 +33,31 @@ def parse_geo_file(geo_file):
     lat_end = 0
     lon_end = 0
 
-    file = open(geo_file, "r")
+    with open(geo_file, "r") as file:
+        for line in file.readlines():
+            line = line.rstrip('\n')
 
-    for line in file.readlines():
-        line = line.rstrip('\n')
+            if line.startswith('#'):
+                continue  # comment
 
-        if line.startswith('#'):
-            continue  # comment
+            if line.startswith('FILENAME'):
+                continue  # not important for us yet
 
-        if line.startswith('FILENAME'):
-            continue  # not important for us yet
+            line_parts = line.split('\t')
 
-        line_parts = line.split('\t')
+            if '' in line_parts:
+                line_parts.remove('')
 
-        if '' in line_parts:
-            line_parts.remove('')
+            if line.startswith('TIEPOINT'):
+                if line_parts[1] == '0':
+                    lat_start = float(line_parts[4])
+                    lon_start = float(line_parts[3])
+                else:
+                    lat_end = float(line_parts[4])
+                    lon_end = float(line_parts[3])
 
-        if line.startswith('TIEPOINT'):
-            if line_parts[1] == '0':
-                lat_start = float(line_parts[4])
-                lon_start = float(line_parts[3])
-            else:
-                lat_end = float(line_parts[4])
-                lon_end = float(line_parts[3])
-
-        if line.startswith('IMAGESIZE'):
-            imagesize = [int(line_parts[2]), int(line_parts[1])]
+            if line.startswith('IMAGESIZE'):
+                imagesize = [int(line_parts[2]), int(line_parts[1])]
 
     bb = [[lat_start, lon_start], [lat_end, lon_end]]
 

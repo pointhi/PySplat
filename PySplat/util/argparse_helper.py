@@ -35,8 +35,7 @@ def check_zoom_level(value):
         levels += [int(value)]
     elif _zoom_level_regex.match(value):
         match = _zoom_level_regex.match(value)
-        print('matches: {0}-{1}'.format(match.groups(0)[0], match.groups(0)[1]))
-        levels += range(int(match.groups(0)[0]), int(match.groups(0)[1]) + 1)
+        levels += range(int(match.group(1)), int(match.group(2)) + 1)
     else:
         raise argparse.ArgumentTypeError("zoom level has to be written in single levels, or as interval 1-12")
     return levels
