@@ -24,6 +24,15 @@ import math
 sys.path.append(os.path.join(sys.path[0], "../")) # enable package import from parent directory
 
 from PySplat.util.argparse_helper import check_thread_count, check_zoom_level
+from PySplat.util.geo_file import parse_geo_file
+
+
+# use xrange on python2 (for speed reasons)
+try:
+    xrange
+except NameError:
+    xrange = range
+
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -56,12 +65,19 @@ def get_pixel_from_pos(rf_geo_data, lat, lon):
     return (pixel_x, pixel_y)
 
 
-def create_tile(xtile, ytile, zoom, rf_img, rf_geo_data):
+def create_tile(xtile, ytile, base_path, zoom, rf_img, rf_geo_data):
     (lat_deg_start, lon_deg_start) = num2deg(xtile, ytile, zoom)
     (lat_deg_end, lon_deg_end) = num2deg(xtile+1, ytile+1, zoom)
+
+    result_dir = os.path.join(base_path, str(zoom), str(xtile))
+    result_filename = os.path.join(result_dir, "{0}.png".format(ytile))
+
+    if not os.path.exists(result_dir):
+        logger.debug("create directory: {0}".format(result_dir))
+        os.makedirs(result_dir)
     #lat_deg_start = lat_deg_end - 170.1022/math.pow(2,zoom)
     #lon_deg_end = lon_deg_start + 360./math.pow(2,zoom)
-    print("create tile: {0}/{1}/{2}.png".format(zoom, xtile, ytile))
+    print("create tile: {0}".format(result_filename))
     #print("{0}, {1}".format(lat_deg_start, lat_deg_end))
     #print("{0}, {1}".format(lon_deg_start, lon_deg_end))
 
@@ -73,7 +89,7 @@ def create_tile(xtile, ytile, zoom, rf_img, rf_geo_data):
 
     #print("use pixel: {0}|{1} to {2}|{3}".format(start_pixel_x, start_pixel_y, end_pixel_x, end_pixel_y))
 
-
+    # TODO: refactor to use OpenCL
     #source_img = ImageChops.offset(rf_img,start_pixel_x, start_pixel_y)
     source_img = rf_img.transform((256,256),Image.EXTENT, (start_pixel_x, start_pixel_y, end_pixel_x, end_pixel_y))
     source_img = source_img.resize((256,256))
@@ -101,52 +117,8 @@ def create_tile(xtile, ytile, zoom, rf_img, rf_geo_data):
         os.mkdir(dirname)
 
     # save tile
-    filedir = './map/{0}/{1}/{2}.png'.format(zoom, xtile, ytile)
-    source_img.save(filedir, "PNG")
+    source_img.save(result_filename, "PNG")
 
-
-'''
-###### main ######
-
-#generate_image("../qth/OE5XGL", "../srtm/SRTM_v3/", "../rendered/tx_coverage_oe5xgl")
-#generate_image("../qth/OE5XBR", "../srtm/SRTM_v3/", "../rendered/tx_coverage_oe5xbr")
-#generate_image("../qth/OE5XUL", "../srtm/SRTM_v3/", "../rendered/tx_coverage_oe5xul")
-#generate_image("../qth/OE5XFN", "../srtm/SRTM_v3/", "../rendered/tx_coverage_oe5xfn")
-#generate_image("../qth/OE2XBB", "../srtm/SRTM_v3/", "../rendered/tx_coverage_oe2xbb")
-generate_image("../qth/OE1XKU", "../srtm/SRTM_v3/", "../rendered/tx_coverage_oe1xku")
-
-#geo_file = parse_geo_file("../rendered/tx_coverage_oe5xgl.geo")
-#geo_file = parse_geo_file("../rendered/tx_coverage_oe5xbr.geo")
-#geo_file = parse_geo_file("../rendered/tx_coverage_oe5xul.geo")
-#geo_file = parse_geo_file("../rendered/tx_coverage_oe5xfn.geo")
-#geo_file = parse_geo_file("../rendered/tx_coverage_oe2xbb.geo")
-geo_file = parse_geo_file("../rendered/tx_coverage_oe1xku.geo")
-
-#print(geo_file)
-
-#geo_image = Image.open("../rendered/tx_coverage_oe5xgl.ppm")
-#geo_image = Image.open("../rendered/tx_coverage_oe5xbr.ppm")
-#geo_image = Image.open("../rendered/tx_coverage_oe5xul.ppm")
-#geo_image = Image.open("../rendered/tx_coverage_oe5xfn.ppm")
-#geo_image = Image.open("../rendered/tx_coverage_oe2xbb.ppm")
-geo_image = Image.open("../rendered/tx_coverage_oe1xku.ppm")
-
-for zoom in range(0,12+1):
-    (xtile_start, ytile_start) = deg2num(geo_file['bb'][0][0], geo_file['bb'][0][1], zoom)
-    (xtile_end, ytile_end) = deg2num(geo_file['bb'][1][0], geo_file['bb'][1][1], zoom)
-
-    print("generate tiles from {xtile_start}/{ytile_start} to {xtile_end}/{ytile_end} for zoom level {zoom}".format(xtile_start=xtile_start
-                                                                                                                   ,ytile_start=ytile_start
-                                                                                                                   ,xtile_end=xtile_end
-                                                                                                                   ,ytile_end=ytile_end
-                                                                                                                   ,zoom=zoom))
-
-    # TODO: -180 +180 overflow
-    for xtile in range(xtile_start,xtile_end+1):
-        for ytile in range(ytile_start,ytile_end+1):
-            create_tile(xtile, ytile, zoom, geo_image, geo_file)
-
-'''
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -157,7 +129,6 @@ if __name__ == '__main__':
     parser.add_argument('-y', dest='threads', type=check_thread_count, default=1, help='number of threads')
     parser.add_argument('-v', '--verbose', help='show extra information', action='store_true')
     parser.add_argument('-d', '--debug', help='show debug informations', action='store_true')
-    # TODO: zoom levels
     # TODO: delete old tiles of outputdir (if they are not going to be overwritten)
 
     args = parser.parse_args()
@@ -175,9 +146,13 @@ if __name__ == '__main__':
         logger.error(".ppm file not found: \"{file}\"".format(file=ppm_file))
         sys.exit(1)
 
+    ppm_file_parsed = Image.open(ppm_file)
+
     if not os.path.isfile(geo_file):
         logger.error(".geo file not found: \"{file}\" (required for geo referencing)".format(file=geo_file))
         sys.exit(1)
+
+    geo_file_parsed = parse_geo_file(geo_file)
 
     output_dir = args.outputdir
 
@@ -197,3 +172,19 @@ if __name__ == '__main__':
     print("geo file: {0}".format(geo_file))
     print("Store tiles into: {0}".format(args.outputdir))
     print("levels: {0}".format(zoom_levels))
+
+    for zoom in zoom_levels:
+        (xtile_start, ytile_start) = deg2num(geo_file_parsed['bb'][0][0], geo_file_parsed['bb'][0][1], zoom)
+        (xtile_end, ytile_end) = deg2num(geo_file_parsed['bb'][1][0], geo_file_parsed['bb'][1][1], zoom)
+
+        print("generate tiles from {xtile_start}/{ytile_start} to {xtile_end}/{ytile_end} for zoom level {zoom}".format(
+            xtile_start=xtile_start
+            , ytile_start=ytile_start
+            , xtile_end=xtile_end
+            , ytile_end=ytile_end
+            , zoom=zoom))
+
+        # TODO: -180 +180 overflow
+        for xtile in range(xtile_start, xtile_end + 1):
+            for ytile in range(ytile_start, ytile_end + 1):
+                create_tile(xtile, ytile, output_dir, zoom, ppm_file_parsed, geo_file_parsed)
