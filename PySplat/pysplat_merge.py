@@ -19,6 +19,7 @@ along with kicad-footprint-generator. If not, see < http://www.gnu.org/licenses/
 import argparse, sys, os
 import logging
 from PIL import Image
+from concurrent.futures import ThreadPoolExecutor
 import time
 
 sys.path.append(os.path.join(sys.path[0], "../")) # enable package import from parent directory
@@ -31,46 +32,77 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-image_order = get_sorted_pixel_order(default_scf_data)
+class TileMerger(object):
+    def __init__(self, image_order, threads):
+        self._image_order = image_order
+        self._max_queue_size = threads * 4
+        self._executor = ThreadPoolExecutor(max_workers=threads)
+
+    def submit_merge_images(self, sources, destination):
+        while self._executor._work_queue.qsize() > self._max_queue_size:
+            time.sleep(.01) # TODO: better apporach
+
+        print("submit calculate tile: \"{0}\" using {1} source tiles".format(destination, len(sources)))
+        self._executor.submit(self.merge_images, sources, destination)
+
+    def wait_until_empty(self):
+        while not self._executor._work_queue.empty():
+            time.sleep(.01)
+
+    def merge_images(self, sources, destination):
+        print("calculate tile: \"{0}\" using {1}".format(destination, sources))
+        time.sleep(1)
+        source_images = []
+
+        for single_source in sources:
+            new_image = Image.open(single_source)
+            source_images += [new_image]
+
+        if len(source_images) > 1:
+            destination_image = self.merge_loaded_images(source_images)
+        else:
+            destination_image = source_images[0].copy()
+
+        destination_image.save(destination, "PNG")
+
+    def merge_loaded_images(self, source_images):
+        source_image_pixdata = []
+        for single_source in source_images:
+            source_image_pixdata += [single_source.load()]
+
+        destination_image = source_images[0].copy()
+        dest_pixdata = destination_image.load()
+
+        for y in range(destination_image.size[1]):
+            for x in range(destination_image.size[0]):
+                for source_pixdata in source_image_pixdata[1:]:
+                    if dest_pixdata[x, y] == (255, 255, 255, 0):
+                        dest_pixdata[x, y] = source_pixdata[x, y]
+                        continue
+
+                    if source_pixdata[x, y] not in self._image_order:
+                        continue
+
+                    if dest_pixdata[x, y] not in self._image_order:
+                        continue
+
+                    # TODO: better merging
+                    if self._image_order.index(source_pixdata[x, y]) < self._image_order.index(dest_pixdata[x, y]):
+                        dest_pixdata[x, y] = source_pixdata[x, y]
 
 
-def merge_images(sources, destination):
-    source_images = []
-    source_image_pixdata = []
-    for single_source in sources:
-        new_image = Image.open(single_source)
-        source_images += [new_image]
-        source_image_pixdata += [new_image.load()]
-    
-    destination_image = source_images[0].copy()
+'''
+class OpenCLTileMerger(TileMerger):
+    def __init__(self, image_order, threads):
+        super.__init__(image_order, threads)
 
-    if len(source_images) == 1:
-        destination_image.save(destination, "PNG") # when there is only one image, simply copy it
-        return
-
-    dest_pixdata = destination_image.load()
-    for y in range(destination_image.size[1]):
-        for x in range(destination_image.size[0]):
-            for source_pixdata in source_image_pixdata[1:]:
-                if dest_pixdata[x,y] == (255, 255, 255, 0):
-                    dest_pixdata[x,y] = source_pixdata[x,y]
-                    continue
-
-                if source_pixdata[x,y] not in image_order:
-                    continue
-                
-                if dest_pixdata[x,y] not in image_order:
-                    continue
-
-                # TODO: better merging
-                
-                if image_order.index(source_pixdata[x,y]) < image_order.index(dest_pixdata[x,y]):
-                    dest_pixdata[x,y] = source_pixdata[x,y]
-
-    destination_image.save(destination, "PNG")
+    def merge_loaded_images(self, source_images):
+        # TODO: implement
+        return super.merge_loaded_images(source_images)
+'''
 
 
-def merge_maps(src_dir, dest_dir):
+def merge_maps(src_dir, dest_dir, tile_merger, **kwargs):
     # get a list of files to merge
     files = {}
     for single_source in src_dir:
@@ -85,8 +117,7 @@ def merge_maps(src_dir, dest_dir):
     # merge files
     for key, src_files in files.items():
         dest_file = os.path.join(dest_dir, key)
-        print("calculate tile: \"{0}\" using {1} source tiles".format(dest_file, len(src_files)))
-        merge_images(src_files, dest_file)
+        tile_merger.submit_merge_images(src_files, dest_file)
 
     # get all subfolders
     sub_level = set()
@@ -109,7 +140,7 @@ def merge_maps(src_dir, dest_dir):
             if os.path.exists(single_src_child):
                 new_src_dir.add(single_src_child)
 
-        merge_maps(new_src_dir, new_dest_dir)
+        merge_maps(new_src_dir, new_dest_dir, tile_merger)
 
 
 if __name__ == '__main__':
@@ -121,6 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('-y', dest='threads', type=check_thread_count, default=1, help='number of threads')
     parser.add_argument('-v', '--verbose', help='show extra information', action='store_true')
     parser.add_argument('-d', '--debug', help='show debug informations', action='store_true')
+    parser.add_argument('--gpu', help='run merge algorihm using gpu', action='store_true')
 
     args = parser.parse_args()
 
@@ -145,10 +177,12 @@ if __name__ == '__main__':
 
     image_order = get_sorted_pixel_order(scf_data)
 
+    tile_merger = TileMerger(image_order, args.threads)
+
     print("input dirs: {0}".format(args.inputdirs))
     print("output dir: {0}".format(output_dir))
     print("scf data: {0}".format(scf_data))
 
-    merge_maps(args.inputdirs, output_dir)
+    merge_maps(args.inputdirs, output_dir, tile_merger)
 
-    #merge_maps(['./OE5XGL/', './OE5XBR/', './OE2XBB/', './OE5XUL/', './OE5XUL-2/', './OE5XUL-3/', './OE5XUL-4/', './OE5XUL-5/'], './map/')
+    tile_merger.wait_until_empty()

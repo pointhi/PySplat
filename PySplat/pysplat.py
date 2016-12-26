@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
         qth_files = get_qth_files(args.qth)
 
-        with ThreadPoolExecutor(max_workers=args.y) as executor:
+        with ThreadPoolExecutor(max_workers=args.threads) as executor:
             futures = []
             try:
                 # create threads
