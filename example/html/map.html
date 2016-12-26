@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>pysplat - map</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+</head>
+<body>
+	<div id="map" style="width: 1024px; height: 720px"></div>
+
+	<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+	<script>
+
+		var map = L.map('map', {maxZoom:12}).setView([48, 13], 7);
+
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+			maxZoom: 12,
+			attribution: 'openstreetmap.org'
+		}).addTo(map);
+
+
+        //L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
+        
+
+        /*L.tileLayer('http://c.tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png', {
+			maxZoom: 12,
+			opacity: '0.3'
+		}).addTo(map);*/
+
+		// this is our rendered map
+		L.tileLayer('./rendered/OE5XGL/{z}/{x}/{y}.png', {
+			maxZoom: 12,
+			attribution: 'splat',
+			opacity: '0.3'
+		}).addTo(map);
+
+		L.marker([47.898366, 13.820238]).addTo(map); // OE5XGL
+		//L.marker([48.3, 14.283333]).addTo(map); // OE5XBR
+		//L.marker([48.2, 13.633333]).addTo(map); // OE5XUL
+		//L.marker([47.966667, 13.45]).addTo(map); // OE5XFN
+		//L.marker([47.766667, 13.45]).addTo(map); // OE2XBB
+	</script>
+</body>
+</html>

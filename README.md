@@ -18,7 +18,8 @@ coverage of radio transmitters with as many TX-sites as we want (without having 
 ### Dependencies
 
 * splat
-* ~~(opencl, PIL,..)~~
+* Pillow
+* ~~(opencl)~~
 
 ### Example usage
 
@@ -27,21 +28,21 @@ coverage of radio transmitters with as many TX-sites as we want (without having 
 *(currently, you have to download and preprocess the required srtm files manually)*
 
 ```
-./PySplat/pysplat.py example/qth/OE5XGL.qth --out ./out --srtm ./path/to/srtm/folder
+./PySplat/pysplat.py example/qth/OE5XGL.qth --out ./example/html/base --srtm ./path/to/srtm/folder
 ```
 
 #### Split tiles
 
-*TODO: not implemented yet*
+```
+./PySplat/pysplat_split.py ./example/html/base/OE5XGL.ppm ./example/html/rendered/OE5XGL -z 1-12
+```
 
-```
-./PySplat/pysplat_split.py ./out/OE5XGL.ppm ./tiles/OE5XGL
-```
+Now we can open the leaflet map located in ```./example/html/map.html``` and check out our new rendered RF map overlay.
 
 #### Merge multiple tiles
 
 *TODO: not implemented yet*
 
 ```
-./PySplat/pysplat_merge.py ./tiles/OE5* --out ./tiles_merged/OE5xxx
+./PySplat/pysplat_merge.py ./example/html/rendered/OE5*/ --out ./example/html/rendered_merged/OE5xxx
 ```
