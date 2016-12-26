@@ -16,9 +16,27 @@ along with kicad-footprint-generator. If not, see < http://www.gnu.org/licenses/
 '''
 
 import argparse
+import re
+
+
+_zoom_level_regex = re.compile("^([0-9]+)-([0-9]+)$")
+
 
 def check_thread_count(value):
     ivalue = int(value)
     if ivalue < 1:
          raise argparse.ArgumentTypeError("thread count has to be >= 1")
     return ivalue
+
+
+def check_zoom_level(value):
+    levels = []
+    if value.isdigit():
+        levels += [int(value)]
+    elif _zoom_level_regex.match(value):
+        match = _zoom_level_regex.match(value)
+        print('matches: {0}-{1}'.format(match.groups(0)[0], match.groups(0)[1]))
+        levels += range(int(match.groups(0)[0]), int(match.groups(0)[1]) + 1)
+    else:
+        raise argparse.ArgumentTypeError("zoom level has to be written in single levels, or as interval 1-12")
+    return levels
