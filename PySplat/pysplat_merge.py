@@ -70,55 +70,46 @@ def merge_images(sources, destination):
     destination_image.save(destination, "PNG")
 
 
-def merge_maps(sources, destination):
-    zoom_levels = set()
-    for single_source in sources:
-        zoom_levels = zoom_levels.union(os.listdir(single_source))
+def merge_maps(src_dir, dest_dir):
+    # get a list of files to merge
+    files = {}
+    for single_source in src_dir:
+        new_files = filter(lambda x: os.path.isfile(os.path.join(single_source, x)) and x.endswith('.png'), os.listdir(single_source))
+        for file in new_files:
+            file_path = os.path.join(single_source, file)
+            if file in files:
+                files[file] = files[file] + [file_path]
+            else:
+                files[file] = [file_path]
 
-    for zoom in sorted(zoom_levels, key=int):
-        zoom_dirname = os.path.join(destination, str(zoom))
-        if not os.path.isdir(zoom_dirname):
-            os.mkdir(zoom_dirname)
-        
-        print("parse tiles for zoom level {0}".format(zoom))
-        tiles_parsed = 0
+    # merge files
+    for key, src_files in files.items():
+        dest_file = os.path.join(dest_dir, key)
+        print("calculate tile: \"{0}\" using {1} source tiles".format(dest_file, len(src_files)))
+        merge_images(src_files, dest_file)
 
-        x_levels = set()
-        start_t = time.time()
-        
-        for single_source in sources:
-            lookup_dir=os.path.join(single_source, str(zoom))
-            if os.path.isdir(lookup_dir):
-                x_levels = x_levels.union(os.listdir(lookup_dir))
+    # get all subfolders
+    sub_level = set()
+    for single_source in src_dir:
+        new_level = filter(lambda x: os.path.isdir(os.path.join(single_source, x)), os.listdir(single_source))
+        sub_level = sub_level.union(new_level)
 
-        for x in sorted(x_levels, key=int):
-            x_dirname = os.path.join(zoom_dirname, str(x))
-            if not os.path.isdir(x_dirname):
-                os.mkdir(x_dirname)
-            
-            y_levels = set()
-            for single_source in sources:
-                lookup_dir=os.path.join(single_source, str(zoom), str(x))
-                if os.path.isdir(lookup_dir):
-                    y_levels = y_levels.union(os.listdir(lookup_dir))
-            
-            for y in sorted(y_levels):
-                tile_destination = os.path.join(x_dirname, str(y))
-                
-                tile_sources = set()
-                
-                for single_source in sources:
-                    lookup_file=os.path.join(single_source, str(zoom), str(x), str(y))
-                    if os.path.isfile(lookup_file):
-                        tile_sources.add(lookup_file)
-                
-                print("calculate tile: \"{0}\" using {1} source tiles".format(tile_destination, len(tile_sources)))
-                
-                tiles_parsed += 1
-                
-                merge_images(tile_sources, tile_destination)
-        end_t = time.time()
-        print("{0} tiles parsed in zoom level {1} required {2}s".format(tiles_parsed, zoom, end_t - start_t))
+    # enter all working subfolders
+    for level in sorted(sub_level, key=int):
+        new_dest_dir = os.path.join(dest_dir, str(level))
+
+        print("enter dir: {0}".format(new_dest_dir))
+        if not os.path.isdir(new_dest_dir):
+            print("create dir: {0}".format(new_dest_dir))
+            os.mkdir(new_dest_dir)
+
+        new_src_dir = set()
+        for single_src in src_dir:
+            single_src_child = os.path.join(single_src, str(level))
+            if os.path.exists(single_src_child):
+                new_src_dir.add(single_src_child)
+
+        merge_maps(new_src_dir, new_dest_dir)
 
 
 if __name__ == '__main__':
