@@ -21,7 +21,7 @@ import re
 _scf_entry_match = re.compile("^\s*([0-9]+):\s*([0-9]+),\s*([0-9]+),\s*([0-9]+)\s*$")
 
 
-default_scf_file = {
+default_scf_data = {
     128: (255, 0, 0),
     118: (255, 165, 0),
     108: (255, 206, 0),
@@ -57,3 +57,14 @@ def parse_scf_file(scf_file):
             signal_colors[match.group(1)] = (match.group(2), match.group(3), match.group(4))
 
     return signal_colors
+
+
+def get_sorted_pixel_order(scf_data):
+    data_map = []
+
+    for key, value in sorted(scf_data.items(), reverse=True):
+        data_map += [(value[0], value[1], value[2], 255)]
+
+    data_map += [(255, 255, 255, 0)] # transparent is the lowest 'color'
+
+    return data_map

@@ -41,8 +41,6 @@ Now we can open the leaflet map located in ```./example/html/map.html``` and che
 
 #### Merge multiple tiles
 
-*TODO: not implemented yet*
-
 ```
 ./PySplat/pysplat_merge.py ./example/html/rendered/OE5*/ --out ./example/html/rendered_merged/OE5xxx
 ```
