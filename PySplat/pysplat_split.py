@@ -18,7 +18,7 @@ along with kicad-footprint-generator. If not, see < http://www.gnu.org/licenses/
 
 import argparse, sys, os
 import logging
-from PIL import Image, ImageFilter, ImageChops
+from PIL import Image
 import math
 
 sys.path.append(os.path.join(sys.path[0], "../")) # enable package import from parent directory
