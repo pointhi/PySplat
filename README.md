@@ -18,8 +18,8 @@ coverage of radio transmitters with as many TX-sites as we want (without having 
 ### Dependencies
 
 * splat
-* Pillow
-* ~~(opencl)~~
+
+python dependencies located in ```requirements.txt`
 
 ### Example usage
 
@@ -42,5 +42,8 @@ Now we can open the leaflet map located in ```./example/html/map.html``` and che
 #### Merge multiple tiles
 
 ```
-./PySplat/pysplat_merge.py ./example/html/rendered/OE5*/ --out ./example/html/rendered_merged/OE5xxx
+./PySplat/pysplat_merge.py ./example/html/rendered/OE5*/ --out ./example/html/rendered_merged/OE5xxx --gpu
 ```
+
+*Please note, using the ```--gpu``` flag activates the OpenCL implementation, which is highly recommended.
+Even using OpenCL over CPU is more than 10 times faster compared to the native python implementation.*

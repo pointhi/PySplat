@@ -65,6 +65,6 @@ def get_sorted_pixel_order(scf_data):
     for key, value in sorted(scf_data.items(), reverse=True):
         data_map += [(value[0], value[1], value[2], 255)]
 
-    data_map += [(255, 255, 255, 0)] # transparent is the lowest 'color'
+    data_map += [(255, 255, 255, 0)] # transparent is the "lowest" color
 
     return data_map
