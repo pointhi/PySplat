@@ -42,7 +42,7 @@ Now we can open the leaflet map located in ```./example/html/map.html``` and che
 #### Merge multiple tiles
 
 ```
-./PySplat/pysplat_merge.py ./example/html/rendered/OE5*/ --out ./example/html/rendered_merged/OE5xxx --gpu
+./PySplat/pysplat_merge.py ./example/html/rendered/OE5*/ ./example/html/rendered_merged/OE5xxx --gpu
 ```
 
 *Please note, using the ```--gpu``` flag activates the OpenCL implementation, which is highly recommended.
