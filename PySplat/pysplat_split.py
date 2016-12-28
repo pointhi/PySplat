@@ -65,19 +65,16 @@ def get_pixel_from_pos(rf_geo_data, lat, lon):
     return (pixel_x, pixel_y)
 
 
-def create_tile(xtile, ytile, base_path, zoom, rf_img, rf_geo_data):
+def create_tile(xtile, ytile, base_path, zoom, rf_img, rf_geo_data, **kwargs):
     (lat_deg_start, lon_deg_start) = num2deg(xtile, ytile, zoom)
     (lat_deg_end, lon_deg_end) = num2deg(xtile+1, ytile+1, zoom)
 
     result_dir = os.path.join(base_path, str(zoom), str(xtile))
     result_filename = os.path.join(result_dir, "{0}.png".format(ytile))
 
-    if not os.path.exists(result_dir):
-        logger.debug("create directory: {0}".format(result_dir))
-        os.makedirs(result_dir)
     #lat_deg_start = lat_deg_end - 170.1022/math.pow(2,zoom)
     #lon_deg_end = lon_deg_start + 360./math.pow(2,zoom)
-    print("create tile: {0}".format(result_filename))
+
     #print("{0}, {1}".format(lat_deg_start, lat_deg_end))
     #print("{0}, {1}".format(lon_deg_start, lon_deg_end))
 
@@ -105,16 +102,15 @@ def create_tile(xtile, ytile, base_path, zoom, rf_img, rf_geo_data):
             elif pixdata[x, y] == (0, 0, 0, 255):
                 pixdata[x, y] = (255, 255, 255, 0) # black to transparent
 
-    # create dir
-    dirname = './map/'.format(zoom, xtile)
-    if not os.path.isdir(dirname):
-        os.mkdir(dirname)
-    dirname = './map/{0}/'.format(zoom, xtile)
-    if not os.path.isdir(dirname):
-        os.mkdir(dirname)
-    dirname = './map/{0}/{1}/'.format(zoom, xtile)
-    if not os.path.isdir(dirname):
-        os.mkdir(dirname)
+    if kwargs.get('blank_tiles') is not True and source_img.convert("L").getextrema() == (255, 255):
+        print("skip tile: {0}".format(result_filename))
+        return
+
+    if not os.path.exists(result_dir):
+        logger.debug("create directory: {0}".format(result_dir))
+        os.makedirs(result_dir)
+
+    print("create tile: {0}".format(result_filename))
 
     # save tile
     source_img.save(result_filename, "PNG")
@@ -126,6 +122,7 @@ if __name__ == '__main__':
     parser.add_argument('inputfile', help='image file which should be converted', action='store')
     parser.add_argument('outputdir', help='output directory where we store the calculated tiles')
     parser.add_argument('-z', dest='zoomlevel', nargs='+', type=check_zoom_level,  default=[range(0, 12 + 1)], help='zoom levels to render (default 0-12)')
+    parser.add_argument('--including-blank-tiles', help='also write blank tiles', action='store_true')
     parser.add_argument('-y', dest='threads', type=check_thread_count, default=1, help='number of threads')
     parser.add_argument('-v', '--verbose', help='show extra information', action='store_true')
     parser.add_argument('-d', '--debug', help='show debug informations', action='store_true')
@@ -187,4 +184,4 @@ if __name__ == '__main__':
         # TODO: -180 +180 overflow
         for xtile in range(xtile_start, xtile_end + 1):
             for ytile in range(ytile_start, ytile_end + 1):
-                create_tile(xtile, ytile, output_dir, zoom, ppm_file_parsed, geo_file_parsed)
+                create_tile(xtile, ytile, output_dir, zoom, ppm_file_parsed, geo_file_parsed, blank_tiles=args.including_blank_tiles)
