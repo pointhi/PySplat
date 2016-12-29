@@ -40,7 +40,7 @@ python dependencies located in ```requirements.txt`
 
 *Please note, there is currently some bug concerning tiles of zoom <=4 (based on my tests), which means the tile are located at the wrong latitude.
 As temporary fix I wrote the tool python_downsample which simply is able to downsample tiles (merge them and return the next lower zoom level).
-(It's not pretty efficient yet, so it should only be used to create low zoom levels at the moment)*
+It's not pretty efficient yet, so it should only be used to create low zoom levels at the moment*
 
 Now we can open the leaflet map located in ```./example/html/map.html``` and check out our new rendered RF map overlay.
 
