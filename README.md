@@ -34,8 +34,13 @@ python dependencies located in ```requirements.txt`
 #### Split tiles
 
 ```
-./PySplat/pysplat_split.py ./example/html/base/OE5XGL.ppm ./example/html/rendered/OE5XGL -z 1-12
+./PySplat/pysplat_split.py ./example/html/base/OE5XGL.ppm ./example/html/rendered/OE5XGL -z 6-12
+./PySplat/pysplat_downsample.py ./example/html/rendered/OE5XGL 6 -z 0-5
 ```
+
+*Please note, there is currently some bug concerning tiles of zoom <=4 (based on my tests), which means the tile are located at the wrong latitude.
+As temporary fix I wrote the tool python_downsample which simply is able to downsample tiles (merge them and return the next lower zoom level).
+(It's not pretty efficient yet, so it should only be used to create low zoom levels at the moment)*
 
 Now we can open the leaflet map located in ```./example/html/map.html``` and check out our new rendered RF map overlay.
 

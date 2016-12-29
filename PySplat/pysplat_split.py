@@ -25,6 +25,7 @@ sys.path.append(os.path.join(sys.path[0], "../")) # enable package import from p
 
 from PySplat.util.argparse_helper import check_thread_count, check_zoom_level
 from PySplat.util.geo_file import parse_geo_file
+from PySplat.util.slippy_map_math import deg2num, num2deg
 
 
 # use xrange on python2 (for speed reasons)
@@ -36,23 +37,6 @@ except NameError:
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
-
-
-#https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
-def num2deg(xtile, ytile, zoom):
-    n = 2.0 ** zoom
-    lon_deg = xtile / n * 360.0 - 180.0
-    lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * ytile / n)))
-    lat_deg = math.degrees(lat_rad)
-    return (lat_deg, lon_deg)
-
-
-def deg2num(lat_deg, lon_deg, zoom):
-    lat_rad = math.radians(lat_deg)
-    n = 2.0 ** zoom
-    xtile = int((lon_deg + 180.0) / 360.0 * n)
-    ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
-    return (xtile, ytile)
 
 
 def get_pixel_from_pos(rf_geo_data, lat, lon):
@@ -72,19 +56,13 @@ def create_tile(xtile, ytile, base_path, zoom, rf_img, rf_geo_data, **kwargs):
     result_dir = os.path.join(base_path, str(zoom), str(xtile))
     result_filename = os.path.join(result_dir, "{0}.png".format(ytile))
 
-    #lat_deg_start = lat_deg_end - 170.1022/math.pow(2,zoom)
-    #lon_deg_end = lon_deg_start + 360./math.pow(2,zoom)
-
-    #print("{0}, {1}".format(lat_deg_start, lat_deg_end))
-    #print("{0}, {1}".format(lon_deg_start, lon_deg_end))
-
     lat_per_pixel = math.fabs((rf_geo_data['bb'][1][0]-rf_geo_data['bb'][0][0])/rf_geo_data['imagesize'][0])
     lon_per_pixel = math.fabs((rf_geo_data['bb'][1][1]-rf_geo_data['bb'][0][1])/rf_geo_data['imagesize'][1])
 
     (start_pixel_x, start_pixel_y) = get_pixel_from_pos(rf_geo_data, lat_deg_start, lon_deg_start)
     (end_pixel_x, end_pixel_y) = get_pixel_from_pos(rf_geo_data, lat_deg_end, lon_deg_end)
 
-    #print("use pixel: {0}|{1} to {2}|{3}".format(start_pixel_x, start_pixel_y, end_pixel_x, end_pixel_y))
+    print("use pixel: {0}|{1} to {2}|{3}".format(start_pixel_x, start_pixel_y, end_pixel_x, end_pixel_y))
 
     # TODO: refactor to use OpenCL
     #source_img = ImageChops.offset(rf_img,start_pixel_x, start_pixel_y)
@@ -159,7 +137,6 @@ if __name__ == '__main__':
         os.makedirs(output_dir)
 
     # parse list of zoom levels we want to render
-    print(args.zoomlevel)
     zoom_levels_set = set()
     for level in args.zoomlevel:
         zoom_levels_set.update(level)
