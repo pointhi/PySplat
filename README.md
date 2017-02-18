@@ -2,12 +2,14 @@
 
 Doing RF calculations using python and [SPLAT](http://www.qsl.net/kd2bd/splat.html)
 
-This project aims for a specific usecase, means calculation of Signal Propagation maps for the usage on online maps.
+This project aims for a specific usecase, means calculation of signal propagation maps which can then be used as overlay
+on online maps, and doing some specific processing on those generated tiles.
 
-Means we call SPLAT in a specific way so we have a georeferenced result. This the can be split into tiles which are
-usable as overlay tiles for libraries like [Leaflet](http://leafletjs.com). Those tiles can furthermore be processed by
-merging multiple of those maps into a single one. Using those techniques allows us to creating maps showing the overal
-coverage of radio transmitters with as many TX-sites as we want (without having the limitations of SPLAT).
+This means we call SPLAT in a specific way to return the results as georeferenced image. This image the can be split
+into tiles which are usable as overlay tiles for libraries like [Leaflet](http://leafletjs.com). Those tiles can
+furthermore be processed by merging multiple of those maps into a single one. Using those techniques allows us to
+create maps showing the overal coverage of radio transmitters with as many TX-sites as we want (without beeing limited
+by SPLAT).
 
 ### Features
 
